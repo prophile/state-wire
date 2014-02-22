@@ -11,6 +11,7 @@ import Control.Category
 import Control.Arrow
 
 import Control.Arrow.Transformer
+import Control.Arrow.Operations(ArrowCircuit, delay)
 
 data Wire a b c where
   WLift :: a b c -> Wire a b c
@@ -47,3 +48,8 @@ instance (ArrowLoop a) => ArrowLoop (Wire a) where
 
 instance (Arrow a) => ArrowTransformer Wire a where
   lift = WLift
+
+instance (ArrowLoop a) => ArrowCircuit (Wire a) where
+  delay = WState (arr swp)
+    where swp ~(x, y) = (y, x)
+
