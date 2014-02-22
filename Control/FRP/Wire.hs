@@ -64,3 +64,23 @@ instance (ArrowReader r a) => ArrowReader r (Wire a) where
     where f' = exchange ^>> newReader f
           exchange ~((x, y), z) = ((x, z), y)
 
+instance (ArrowWriter w a) => ArrowWriter w (Wire a) where
+  write = WLift write
+  newWriter (WLift x) = WLift (newWriter x)
+  newWriter (WState f s) = WState (newWriter f >>^ exchange) s
+    where exchange ~((x, y), z) = ((x, z), y)
+
+instance (ArrowState s a) => ArrowState s (Wire a) where
+  fetch = WLift fetch
+  store = WLift store
+
+instance (ArrowChoice a, ArrowError ex a) => ArrowError ex (Wire a) where
+  raise = WLift raise
+  newError (WLift a) = WLift (newError a)
+  newError (WState f a) = WState f' a
+    where f' = proc ~(x, s) -> do y <- newError f -< (x, s)
+                                  case y of
+                                    Left ex  -> id -< (Left ex, s)
+                                    Right (z, s') -> id -< (Right z, s')
+  tryInUnless = tryInUnlessDefault
+
