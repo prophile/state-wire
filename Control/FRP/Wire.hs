@@ -53,3 +53,6 @@ instance (ArrowLoop a) => ArrowCircuit (Wire a) where
   delay = WState (arr swp)
     where swp ~(x, y) = (y, x)
 
+instance (ArrowZero a) => ArrowZero (Wire a) where
+  zeroArrow = WLift zeroArrow
+
