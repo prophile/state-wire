@@ -22,3 +22,9 @@ instance (Arrow a) => Category (Wire a) where
                                         ~(z, sf') <- f -< (y, sf)
                                         id -< (z, (sf', sg'))
 
+instance (Arrow a) => Arrow (Wire a) where
+  arr = WLift . arr
+  first (WLift f) = WLift (first f)
+  first (WState f s) = WState (exchange ^>> first f >>^ exchange) s
+    where exchange ~((x, y), z) = ((x, z), y)
+
