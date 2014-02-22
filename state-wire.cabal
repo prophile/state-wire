@@ -1,0 +1,33 @@
+name:                state-wire
+version:             0.1.0.0
+synopsis:            Stateful FRP wires
+description:
+  FRP wires with existential state arrows.
+homepage:            https://github.com/prophile/state-wire
+license:             MIT
+license-file:        LICENSE
+author:              Alistair Lynn
+maintainer:          arplynn+swire@gmail.com
+copyright:           © Alistair Lynn, 2014
+category:            Control
+build-type:          Simple
+cabal-version:       >=1.8
+
+library
+  build-depends:
+    base == 4.*,
+    arrows >= 0.4,
+    arrow-improve == 0.1.0.0
+  exposed-modules:
+    Control.FRP.Wire
+  GHC-options:         -Wall -Werror
+
+test-suite tests
+  type:              exitcode-stdio-1.0
+  main-is:           Tests.hs
+  build-depends:
+    base == 4.*,
+    arrows >= 0.4,
+    hspec >= 1.5,
+    QuickCheck >= 2.6,
+    arrow-improve == 0.1.0.0
