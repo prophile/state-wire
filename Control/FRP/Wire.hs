@@ -1,5 +1,7 @@
 {-# LANGUAGE GADTs #-}
 {-# LANGUAGE Arrows #-}
+{-# LANGUAGE FlexibleInstances #-}
+{-# LANGUAGE MultiParamTypeClasses #-}
 
 module Control.FRP.Wire(Wire) where
 
@@ -7,6 +9,8 @@ import Prelude hiding (id, (.))
 
 import Control.Category
 import Control.Arrow
+
+import Control.Arrow.Transformer
 
 data Wire a b c where
   WLift :: a b c -> Wire a b c
@@ -40,3 +44,6 @@ instance (ArrowLoop a) => ArrowLoop (Wire a) where
   loop (WLift f) = WLift (loop f)
   loop (WState f s) = WState (loop $ exchange ^>> f >>^ exchange) s
     where exchange ~((a, b), c) = ((a, c), b)
+
+instance (Arrow a) => ArrowTransformer Wire a where
+  lift = WLift
