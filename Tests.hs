@@ -50,3 +50,8 @@ main = hspec $ do
       testWire (numIntegrate 1) [1, 2, 3] `shouldBe` [1, 3, 6]
     it "can numerically differentiate" $ do
       testWire (numDifferentiate 1) [1, 2, 3] `shouldBe` [1, 1, 1]
+    it "can implement arr" $ property $
+      \f x -> let apped = apply f in
+                (testWire (arr apped) (x :: [Integer])) `shouldBe`
+                 (map apped x :: [Integer])
+
