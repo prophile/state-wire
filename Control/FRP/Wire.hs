@@ -4,7 +4,7 @@
 {-# LANGUAGE MultiParamTypeClasses #-}
 {-# LANGUAGE UndecidableInstances #-}
 
-module Control.FRP.Wire(Wire, runWire) where
+module Control.FRP.Wire(Wire, runWire, stepWire) where
 
 import Prelude hiding (id, (.))
 
@@ -23,6 +23,10 @@ runWire (WLift a) = ioLoop
   where ioLoop = a >>> ioLoop
 runWire (WState f s) = const ((), s) ^>> ioLoop >>^ const ()
   where ioLoop = f >>> ioLoop
+
+stepWire :: (Arrow a) => Wire a b c -> a b (c, Wire a b c)
+stepWire w@(WLift a) = a >>^ (\x -> (x, w))
+stepWire (WState f s) = (\x -> (x, s)) ^>> f >>^ (\(x, s') -> (x, WState f s'))
 
 instance (Arrow a) => Category (Wire a) where
   id = WLift id
