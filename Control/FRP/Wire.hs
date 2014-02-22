@@ -28,3 +28,11 @@ instance (Arrow a) => Arrow (Wire a) where
   first (WState f s) = WState (exchange ^>> first f >>^ exchange) s
     where exchange ~((x, y), z) = ((x, z), y)
 
+instance (ArrowChoice a) => ArrowChoice (Wire a) where
+  left (WLift f) = WLift (left f)
+  left (WState f s) = WState (exchange ^>> left f >>^ unexchange) s
+    where exchange (Left x, y) = Left (x, y)
+          exchange (Right x, y) = Right (x, y)
+          unexchange (Left (x, y)) = (Left x, y)
+          unexchange (Right (x, y)) = (Right x, y)
+
