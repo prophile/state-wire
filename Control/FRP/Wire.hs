@@ -36,3 +36,7 @@ instance (ArrowChoice a) => ArrowChoice (Wire a) where
           unexchange (Left (x, y)) = (Left x, y)
           unexchange (Right (x, y)) = (Right x, y)
 
+instance (ArrowLoop a) => ArrowLoop (Wire a) where
+  loop (WLift f) = WLift (loop f)
+  loop (WState f s) = WState (loop $ exchange ^>> f >>^ exchange) s
+    where exchange ~((a, b), c) = ((a, c), b)
