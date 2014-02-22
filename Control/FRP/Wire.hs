@@ -2,6 +2,7 @@
 {-# LANGUAGE Arrows #-}
 {-# LANGUAGE FlexibleInstances #-}
 {-# LANGUAGE MultiParamTypeClasses #-}
+{-# LANGUAGE UndecidableInstances #-}
 
 module Control.FRP.Wire(Wire) where
 
@@ -11,7 +12,7 @@ import Control.Category
 import Control.Arrow
 
 import Control.Arrow.Transformer
-import Control.Arrow.Operations(ArrowCircuit, delay)
+import Control.Arrow.Operations
 
 data Wire a b c where
   WLift :: a b c -> Wire a b c
@@ -55,4 +56,11 @@ instance (ArrowLoop a) => ArrowCircuit (Wire a) where
 
 instance (ArrowZero a) => ArrowZero (Wire a) where
   zeroArrow = WLift zeroArrow
+
+instance (ArrowReader r a) => ArrowReader r (Wire a) where
+  readState = WLift readState
+  newReader (WLift x) = WLift (newReader x)
+  newReader (WState f s) = WState f' s
+    where f' = exchange ^>> newReader f
+          exchange ~((x, y), z) = ((x, z), y)
 
