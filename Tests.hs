@@ -15,6 +15,8 @@ import Control.Category
 import Control.Arrow
 import Control.Applicative
 
+import Data.Monoid
+
 testWire :: (ArrowApply a, ArrowChoice a) => Wire a b c -> a [b] [c]
 testWire w = proc xs -> case xs of
                           []     -> id -< []
@@ -22,11 +24,17 @@ testWire w = proc xs -> case xs of
                                        ys <- testWire w' -<< xs
                                        id -< y:ys
 
+latch :: (Arrow a) => Wire a (Maybe b) (Maybe b)
+latch = Last ^>> accumulate >>^ getLast
+
 main :: IO ()
 main = hspec $ do
   describe "Wire" $ do
     it "respects identity" $ do
       testWire id [1, 2, 3] `shouldBe` [1, 2, 3]
+    it "can latch" $ do
+      testWire latch [Nothing, Just 2, Nothing, Just 3, Nothing] `shouldBe`
+                     [Nothing, Just 2, Just 2, Just 3, Just 3]
     it "can implement arr" $ property $
       \f x -> let apped = apply f in
                 (testWire (arr apped) (x :: [Integer])) `shouldBe`
