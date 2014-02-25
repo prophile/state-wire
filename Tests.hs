@@ -24,8 +24,11 @@ testWire w = proc xs -> case xs of
                                        ys <- testWire w' -<< xs
                                        id -< y:ys
 
-latch :: (Arrow a) => Wire a (Maybe b) (Maybe b)
+latch :: (ArrowWire a) => a (Maybe b) (Maybe b)
 latch = Last ^>> accumulate >>^ getLast
+
+inhibit :: (ArrowWire a) => a (Maybe b) (Maybe b)
+inhibit = First ^>> accumulate >>^ getFirst
 
 main :: IO ()
 main = hspec $ do

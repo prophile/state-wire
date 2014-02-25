@@ -4,7 +4,8 @@
 {-# LANGUAGE MultiParamTypeClasses #-}
 {-# LANGUAGE UndecidableInstances #-}
 
-module Control.FRP.Wire(Wire, runWire, stepWire, accumulate) where
+module Control.FRP.Wire(Wire, ArrowWire, accumulate,
+                        runWire, stepWire) where
 
 import Prelude hiding (id, (.))
 
@@ -63,9 +64,12 @@ instance (ArrowLoop a) => ArrowLoop (Wire a) where
 instance (Arrow a) => ArrowTransformer Wire a where
   lift = WLift
 
-accumulate :: (Arrow a, Idempotent b) => Wire a b b
-accumulate = WState (arr process) mempty
-  where process ~(x, s) = let s' = s `mappend` x in (s', s')
+class (Arrow a) => ArrowWire a where
+  accumulate :: (Idempotent b) => a b b
+
+instance (Arrow a) => ArrowWire (Wire a) where
+  accumulate = WState (arr process) mempty
+    where process ~(x, s) = let s' = s `mappend` x in (s', s')
 
 instance (ArrowZero a) => ArrowZero (Wire a) where
   zeroArrow = WLift zeroArrow
