@@ -16,6 +16,7 @@ import Control.Arrow
 import Control.Applicative
 
 import Data.Monoid
+import Data.Maybe
 
 testWire :: (ArrowApply a, ArrowChoice a) => Wire a b c -> a [b] [c]
 testWire w = proc xs -> case xs of
@@ -30,6 +31,10 @@ latch = Last ^>> accumulate >>^ getLast
 inhibit :: (ArrowWire a) => a (Maybe b) (Maybe b)
 inhibit = First ^>> accumulate >>^ getFirst
 
+lock :: (ArrowWire a) => a (c, Bool) (Maybe c)
+lock = condition ^>> latch
+  where condition ~(x, en) = if en then Just x else Nothing
+
 main :: IO ()
 main = hspec $ do
   describe "Wire" $ do
@@ -41,6 +46,11 @@ main = hspec $ do
     it "can inhibit" $ do
       testWire inhibit [Nothing, Just 2, Just 3, Nothing] `shouldBe`
                        [Nothing, Just 2, Just 2, Just 2]
+    it "can lock, to a range" $ do
+      let inRange x = (x >= 0) && (x <= 10)
+      testWire ((id &&& arr inRange) >>> lock >>^ fromMaybe 0)
+        [3, 6, -3, -5, 8, 10, 11] `shouldBe`
+        [3, 6,  6,  6, 8, 10, 10]
     it "can implement arr" $ property $
       \f x -> let apped = apply f in
                 (testWire (arr apped) (x :: [Integer])) `shouldBe`
