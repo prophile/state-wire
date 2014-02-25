@@ -17,7 +17,8 @@ library
   build-depends:
     base == 4.*,
     arrows >= 0.4,
-    arrow-improve == 0.1.0.0
+    arrow-improve == 0.1.0.0,
+    idempotent == 0.1.*
   exposed-modules:
     Control.FRP.Wire
   GHC-options:         -Wall -Werror
@@ -30,4 +31,5 @@ test-suite tests
     arrows >= 0.4,
     hspec >= 1.5,
     QuickCheck >= 2.6,
-    arrow-improve == 0.1.0.0
+    arrow-improve == 0.1.0.0,
+    idempotent == 0.1.*
