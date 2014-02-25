@@ -38,6 +38,9 @@ main = hspec $ do
     it "can latch" $ do
       testWire latch [Nothing, Just 2, Nothing, Just 3, Nothing] `shouldBe`
                      [Nothing, Just 2, Just 2, Just 3, Just 3]
+    it "can inhibit" $ do
+      testWire inhibit [Nothing, Just 2, Just 3, Nothing] `shouldBe`
+                       [Nothing, Just 2, Just 2, Just 2]
     it "can implement arr" $ property $
       \f x -> let apped = apply f in
                 (testWire (arr apped) (x :: [Integer])) `shouldBe`
