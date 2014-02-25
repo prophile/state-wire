@@ -18,6 +18,8 @@ import Control.Arrow.Operations
 import Data.Monoid
 import Data.Monoid.Idempotent
 
+import Control.Arrow.Improve
+
 data Wire a b c where
   WLift :: a b c -> Wire a b c
   WState :: a (b, s) (c, s) -> s -> Wire a b c
@@ -100,4 +102,8 @@ instance (ArrowChoice a, ArrowError ex a) => ArrowError ex (Wire a) where
                                     Left ex  -> id -< (Left ex, s)
                                     Right (z, s') -> id -< (Right z, s')
   tryInUnless = tryInUnlessDefault
+
+-- instance for ImproveArrow
+instance (ArrowWire a) => ArrowWire (ImproveArrow a) where
+  accumulate = lift accumulate
 
