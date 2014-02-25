@@ -4,7 +4,7 @@
 {-# LANGUAGE MultiParamTypeClasses #-}
 {-# LANGUAGE UndecidableInstances #-}
 
-module Control.FRP.Wire(Wire, runWire, stepWire) where
+module Control.FRP.Wire(Wire, runWire, stepWire, accumulate) where
 
 import Prelude hiding (id, (.))
 
@@ -13,6 +13,9 @@ import Control.Arrow
 
 import Control.Arrow.Transformer
 import Control.Arrow.Operations
+
+import Data.Monoid
+import Data.Monoid.Idempotent
 
 data Wire a b c where
   WLift :: a b c -> Wire a b c
@@ -60,9 +63,9 @@ instance (ArrowLoop a) => ArrowLoop (Wire a) where
 instance (Arrow a) => ArrowTransformer Wire a where
   lift = WLift
 
-instance (ArrowLoop a) => ArrowCircuit (Wire a) where
-  delay = WState (arr swp)
-    where swp ~(x, y) = (y, x)
+accumulate :: (Arrow a, Idempotent b) => Wire a b b
+accumulate = WState (arr process) mempty
+  where process ~(x, s) = let s' = s `mappend` x in (s', s')
 
 instance (ArrowZero a) => ArrowZero (Wire a) where
   zeroArrow = WLift zeroArrow
