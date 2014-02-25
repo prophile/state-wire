@@ -4,6 +4,7 @@
 {-# LANGUAGE MultiParamTypeClasses #-}
 {-# LANGUAGE UndecidableInstances #-}
 
+-- |Very simple FRP state wires.
 module Control.FRP.Wire(Wire, ArrowWire, accumulate,
                         runWire, stepWire) where
 
@@ -20,16 +21,20 @@ import Data.Monoid.Idempotent
 
 import Control.Arrow.Improve
 
+-- |The Wire transformer, transforming an arrow a to a wire on that arrow.
 data Wire a b c where
   WLift :: a b c -> Wire a b c
   WState :: a (b, s) (c, s) -> s -> Wire a b c
 
+-- |Run an IO-free wire, running indefinitely.
 runWire :: (Arrow a) => Wire a () () -> a () ()
 runWire (WLift a) = ioLoop
   where ioLoop = a >>> ioLoop
 runWire (WState f s) = const ((), s) ^>> ioLoop >>^ const ()
   where ioLoop = f >>> ioLoop
 
+-- |Run a single step of a wire, essentially transforming the Wire into an
+-- automaton.
 stepWire :: (Arrow a) => Wire a b c -> a b (c, Wire a b c)
 stepWire w@(WLift a) = a >>^ (\x -> (x, w))
 stepWire (WState f s) = (\x -> (x, s)) ^>> f >>^ (\(x, s') -> (x, WState f s'))
@@ -66,7 +71,16 @@ instance (ArrowLoop a) => ArrowLoop (Wire a) where
 instance (Arrow a) => ArrowTransformer Wire a where
   lift = WLift
 
+-- |The class of arrows that are FRP wires.
 class (Arrow a) => ArrowWire a where
+  -- |Accumulate a value of a type that forms an idempotent monoid.
+  -- This essentially keeps a "state", initially mempty, and adds
+  -- new values that pass through, yielding the accumulated total in
+  -- the output.
+  --
+  -- The idempotent constraint is there to ensure that the output does
+  -- not change if the input does not change, which "contains" change -
+  -- an unrelated input cannot cause extra output.
   accumulate :: (Idempotent b) => a b b
 
 instance (Arrow a) => ArrowWire (Wire a) where
